@@ -23,9 +23,9 @@ router.get('/', ensure.authorized, async (req, res)=>{
         else{
             val=1;
             data={
-            data: results.rows,
-            status: 'founded',
-            valid: val
+              data: results.rows,
+              status: 'founded',
+              valid: val,
             }
             res.status(200).json(data);
         }
@@ -90,11 +90,11 @@ router.post('/login', async (req, res)=>{
     });
   });
   router.post('/', async (req, res)=>{
-    const { name, lastname, birtdate, email, password } = req.body;
-    const token=jwt.sign(email, "El Classroom de Moviles.");
+    const { name, lastname, birtdate, email, password, type } = req.body;
+    const token=jwt.sign({'email':email, 'type':type}, "El Classroom de Moviles.");
     var val = 0
-    await pool.query("insert into tbluser(name, lastname, birtdate, email, password) values($1, $2, $3, $4, $5);",
-    [name, lastname, birtdate, email, password], (error, results) => {
+    await pool.query("insert into tbluser(name, lastname, birtdate, email, password, idtype_id, token) values($1, $2, $3, $4, $5, $6);",
+    [name, lastname, birtdate, email, password, type], (error, results) => {
       if(error){
         res.status(400).json({
           status: 'not inserted',

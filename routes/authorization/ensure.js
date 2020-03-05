@@ -7,7 +7,8 @@ function ensureAuthorized(req, res, next) {
           if (err) {
             return res.status(403).json({status : 'unauthorized'});    
           } else {
-            req.decoded = decoded;    
+            req.decoded = decoded;  
+            // console.log(decoded);  
             next();
           }
         });
