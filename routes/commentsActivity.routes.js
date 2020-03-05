@@ -1,5 +1,6 @@
 const express = require('express');
 const Pool = require("pg").Pool;
+const ensure = require('./authorization/ensure');
 
 const router = express.Router();
 const pool = new Pool({
@@ -10,7 +11,7 @@ const pool = new Pool({
     port: 5432
 });
 
-router.get('/', async (req, res)=>{
+router.get('/', ensure.authorized, async (req, res)=>{
     var val = 0
     await pool.query("select * from tblcommentactivity;", (error, results) => {
         if(error)
@@ -29,7 +30,7 @@ router.get('/', async (req, res)=>{
         }
     });
 });
-router.get('/:id', async (req, res)=>{
+router.get('/:id', ensure.authorized, async (req, res)=>{
     const id=parseInt(req.params.id);
     var val = 0
     await pool.query("select * from tblcommentactivity where id=$1;", [id], (error, results) => {
@@ -56,7 +57,7 @@ router.get('/:id', async (req, res)=>{
         res.status(200).json(data);
     });
 });
-  router.post('/', async (req, res)=>{
+  router.post('/', ensure.authorized, async (req, res)=>{
     const { comment, datcomactivity, idacyivity_id, iduse_id } = req.body;
     var val = 0
     await pool.query("insert into tblcommentactivity(comment, datcomactivity, idacyivity_id, iduse_id) values($1, $2, $3, $4);",
@@ -75,7 +76,7 @@ router.get('/:id', async (req, res)=>{
       }
     });
   });
-  router.put('/:id', async (req, res)=>{
+  router.put('/:id', ensure.authorized, async (req, res)=>{
     const id=parseInt(req.params.id);
     const { comment, datcomactivity, idacyivity_id, iduse_id } = req.body;
     await pool.query("update tblcommentactivity set comment=$1, datcomactivity=$2, idacyivity_id=$3, iduse_id=$4 where id=$5;",
@@ -94,7 +95,7 @@ router.get('/:id', async (req, res)=>{
       }
     });
   });
-  router.delete('/:id', async (req, res)=>{
+  router.delete('/:id', ensure.authorized, async (req, res)=>{
     const id=parseInt(req.params.id);
     await pool.query("delete from tblcommentactivity where id=$1;",
     [id], (error, results) => {

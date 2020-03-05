@@ -1,5 +1,6 @@
 const express = require('express');
 const Pool = require("pg").Pool;
+const ensure = require('./authorization/ensure');
 
 const router = express.Router();
 const pool = new Pool({
@@ -10,7 +11,7 @@ const pool = new Pool({
     port: 5432
 });
 
-router.get('/', async (req, res)=>{
+router.get('/', ensure.authorized, async (req, res)=>{
     var val = 0
     await pool.query("select * from tblcourse;", (error, results) => {
         if(error)
@@ -29,7 +30,7 @@ router.get('/', async (req, res)=>{
         }
     });
 });
-router.get('/:id', async (req, res)=>{
+router.get('/:id', ensure.authorized, async (req, res)=>{
     const id=parseInt(req.params.id);
     var val = 0
     await pool.query("select * from tblcourse where id=$1;", [id], (error, results) => {
@@ -56,11 +57,11 @@ router.get('/:id', async (req, res)=>{
         res.status(200).json(data);
     });
 });
-  router.post('/', async (req, res)=>{
-    const { name, description, idteacher_id } = req.body;
+  router.post('/', ensure.authorized, async (req, res)=>{
+    const { id, name, description, idteacher_id } = req.body;
     var val = 0
-    await pool.query("insert into tblcourse(name, description, idteacher_id) values($1, $2, $3);",
-    [name, description, idteacher_id], (error, results) => {
+    await pool.query("insert into tblcourse(id, name, description, idteacher_id) values($1, $2, $3, $4);",
+    [id, name, description, idteacher_id], (error, results) => {
       if(error){
         res.status(400).json({
           status: 'not inserted',
@@ -75,7 +76,7 @@ router.get('/:id', async (req, res)=>{
       }
     });
   });
-  router.put('/:id', async (req, res)=>{
+  router.put('/:id', ensure.authorized, async (req, res)=>{
     const id=parseInt(req.params.id);
     const { name, description, idteacher_id } = req.body;
     await pool.query("update tblcourse set name=$1, description=$2, idteacher_id=$3 where id=$4;",
@@ -94,7 +95,7 @@ router.get('/:id', async (req, res)=>{
       }
     });
   });
-  router.delete('/:id', async (req, res)=>{
+  router.delete('/:id', ensure.authorized, async (req, res)=>{
     const id=parseInt(req.params.id);
     await pool.query("delete from tblcourse where id=$1;",
     [id], (error, results) => {

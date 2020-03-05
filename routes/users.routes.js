@@ -1,5 +1,7 @@
 const express = require('express');
 const Pool = require("pg").Pool;
+const jwt = require("jsonwebtoken");
+const ensure = require('./authorization/ensure');
 
 const router = express.Router();
 const pool = new Pool({
@@ -10,7 +12,7 @@ const pool = new Pool({
     port: 5432
 });
 
-router.get('/', async (req, res)=>{
+router.get('/', ensure.authorized, async (req, res)=>{
     var val = 0
     await pool.query("select * from tbluser;", (error, results) => {
         if(error)
@@ -29,7 +31,7 @@ router.get('/', async (req, res)=>{
         }
     });
 });
-router.get('/:id', async (req, res)=>{
+router.get('/:id', ensure.authorized, async (req, res)=>{
     const id=parseInt(req.params.id);
     var val = 0
     await pool.query("select * from tbluser where id=$1;", [id], (error, results) => {
@@ -71,7 +73,8 @@ router.post('/login', async (req, res)=>{
           data = {
             data: {
               nombre: results.rows[0].name,
-              correo: results.rows[0].email
+              correo: results.rows[0].email,
+              token: results.rows[0].token
             },
             status: 'authenticated',
             valid: val
@@ -88,6 +91,7 @@ router.post('/login', async (req, res)=>{
   });
   router.post('/', async (req, res)=>{
     const { name, lastname, birtdate, email, password } = req.body;
+    const token=jwt.sign(email, "El Classroom de Moviles.");
     var val = 0
     await pool.query("insert into tbluser(name, lastname, birtdate, email, password) values($1, $2, $3, $4, $5);",
     [name, lastname, birtdate, email, password], (error, results) => {
@@ -105,7 +109,7 @@ router.post('/login', async (req, res)=>{
       }
     });
   });
-  router.put('/:id', async (req, res)=>{
+  router.put('/:id', ensure.authorized, async (req, res)=>{
     const id=parseInt(req.params.id);
     const { name, lastname, birtdate, email, password } = req.body;
     await pool.query("update tbluser set name=$1, lastname=$2, birtdate=$3, email=$4, password=$5 where id=$6;",
@@ -124,7 +128,7 @@ router.post('/login', async (req, res)=>{
       }
     });
   });
-  router.delete('/:id', async (req, res)=>{
+  router.delete('/:id', ensure.authorized, async (req, res)=>{
     const id=parseInt(req.params.id);
     await pool.query("delete from tbluser where id=$1;",
     [id], (error, results) => {
